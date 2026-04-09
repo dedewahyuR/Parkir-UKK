@@ -1,0 +1,117 @@
+/* Reset dasar */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body */
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f4f6f9;
+    padding: 30px;
+}
+
+/* Judul */
+h2 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+h3 {
+    margin: 15px 0;
+    color: #444;
+}
+
+/* Form */
+form {
+    background: white;
+    padding: 20px;
+    width: 350px;
+    border-radius: 8px;
+    box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Input */
+form input,
+form select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Tombol */
+button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px;
+    width: 100%;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+/* Garis pemisah */
+hr {
+    margin: 30px 0;
+}
+
+/* Tabel */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+/* Header tabel */
+th {
+    background-color: #3498db;
+    color: white;
+    padding: 10px;
+}
+
+/* Isi tabel */
+td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Hover row */
+tr:hover {
+    background-color: #f2f2f2;
+}
+
+/* Link hapus */
+td a {
+    text-decoration: none;
+    color: white;
+    background-color: #e74c3c;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+td a:hover {
+    background-color: #c0392b;
+}
+
+/* Link kembali */
+body > a {
+    display: inline-block;
+    margin-top: 20px;
+    text-decoration: none;
+    color: white;
+    background: #2ecc71;
+    padding: 8px 15px;
+    border-radius: 5px;
+}
+
+body > a:hover {
+    background: #27ae60;
+}

@@ -1,0 +1,40 @@
+# ─── Environment & Config ─────────────────────────────
+.env
+env.bak
+
+# ─── Dependencies ────────────────────────────────────
+vendor/
+
+# ─── Writable Directory (cache, logs, sessions, uploads) ──
+writable/cache/
+writable/debugbar/
+writable/logs/
+writable/session/
+writable/uploads/
+
+# ─── Public Assets & User Uploads ─────────────────────
+public/uploads/
+public/assets/
+
+# ─── IDE & Editor ─────────────────────────────────────
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# ─── OS & Temporary Files ─────────────────────────────
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+
+# ─── Testing & Coverage  ────────────────────
+.phpunit.result.cache
+coverage/
+
+
+# ─── diagram gua ────────────────────
+diagram/

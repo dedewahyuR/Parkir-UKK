@@ -78,32 +78,31 @@ class Transaksi extends BaseController
         return view('dashboard', $data);
     }
 
-    public function masuk()
-    {
-        $idcard = $this->request->getPost('idcard');
-        $jenis = $this->request->getPost('jenisKendaraan') ?? 'motor';
+    // {
+    //     $idcard = $this->request->getPost('idcard');
+    //     $jenis = $this->request->getPost('jenisKendaraan') ?? 'motor';
 
-        $tarif = match($jenis) {
-            'mobil' => 5000,
-            default => 2000
-        };
+    //     $tarif = match($jenis) {
+    //         'mobil' => 5000,
+    //         default => 2000
+    //     };
 
-        $this->model->insert([
-            'idcard' => $idcard,
-            'jenis_kendaraan' => $jenis,
-            'tarif' => $tarif,
-            'checkin_time' => date('Y-m-d H:i:s'),
-            'status' => 'masuk'
-        ]);
+    //     $this->model->insert([
+    //         'idcard' => $idcard,
+    //         'jenis_kendaraan' => $jenis,
+    //         'tarif' => $tarif,
+    //         'checkin_time' => date('Y-m-d H:i:s'),
+    //         'status' => 'masuk'
+    //     ]);
 
-        $published = $this->publishMqtt("parking/adew/entry/servo", "OPEN");
+    //     $published = $this->publishMqtt("parking/adew/entry/servo", "OPEN");
         
-        $msg = $published 
-            ? 'Kendaraan berhasil masuk.' 
-            : 'Kendaraan masuk, tapi servo gagal (cek log).';
+    //     $msg = $published 
+    //         ? 'Kendaraan berhasil masuk.' 
+    //         : 'Kendaraan masuk, tapi servo gagal (cek log).';
             
-        return redirect()->to('/dashboard')->with('success', $msg);
-    }
+    //     return redirect()->to('/dashboard')->with('success', $msg);
+    // }
 
     public function prosesKeluar($id)
     {
@@ -142,7 +141,7 @@ class Transaksi extends BaseController
         ]);
 
 
-        $published = $this->publishMqtt("parking/adew/entry/servo", "OPEN");
+        $published = $this->publishMqtt("parking/adew/exit/servo", "OPEN");
         
         $msg = $published 
             ? 'Kendaraan berhasil keluar.' 
@@ -152,17 +151,6 @@ class Transaksi extends BaseController
             ->with('success', $msg);
     }
 
-    // ❌ HAPUS method keluar() yang lama - sudah digabung
 
-    public function bukaPalangMasuk()
-    {
-        $this->publishMqtt("parking/adew/entry/servo", "OPEN");
-        return redirect()->to('/dashboard');
-    }
-
-    public function bukaPalangKeluar()
-    {
-        $this->publishMqtt("parking/adew/exit/servo", "OPEN");
-        return redirect()->to('/dashboard');
-    }
+    
 }

@@ -11,11 +11,10 @@
 	<h2>CRUD User</h2>
 	<h3>Tambah User</h3>
 	<form action="<?= base_url('user/simpan') ?>" method="post">
-		<input type="text" name="namaLengkap" placeholder="Nama Lengkap">
-		<input type="text" name="username" placeholder="Username">
-		<input type="password" name="password" placeholder="Password">
+		<input type="text" name="namaLengkap" placeholder="Nama Lengkap" required>
+		<input type="text" name="username" placeholder="Username" required>
+		<input type="password" name="password" placeholder="Password" required>
 		<select name="level">
-			<option value="owner">Owner</option>
 			<option value="admin">Admin</option>
 			<option value="petugas">Petugas</option>
 		</select>
@@ -56,7 +55,7 @@
 
 		<?php endforeach; ?>
 	</table>
-	<a href="<?= base_url('dashboard') ?>"> kembali ke dashboard</a>
+	<a href="/logout" class="menu-link">Logout</a>
 
 </body>
 

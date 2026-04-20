@@ -34,9 +34,13 @@ class CekLogin extends BaseController
                 'level' => $user['level'],
                 'login' => true
             ]);
+            if ($user['level'] == 'admin') {
+                return redirect()->to('/user')->with("Selamat Datang" , "Selamat datang '$user[namaLengkap]'. Ini adalah halaman dashboard");
+            } else {
 
             return redirect()->to('/dashboard')->with("Selamat Datang" , "Selamat datang '$user[namaLengkap]'. Ini adalah halaman dashboard");
         }
+    }
 
         return redirect()->back()->with('error', 'Username / Password salah');
     }

@@ -20,28 +20,39 @@ class MqttListener extends BaseCommand
         'password' => 'Adewahyu1',
         'clientId' => 'ci4-cli-listener-'
     ];
-    private function publishMqtt(string $topic, string $message): bool
-    {
-        try {
-            $client = $this->getMqttClient();
-            $client->publish($topic, $message, 0, false);
-            $client->disconnect();
-            
-            log_message('info', "✅ MQTT published: $topic = $message");
-            return true;
-        } catch (\Exception $e) {
-            log_message('error', '❌ MQTT Publish Failed: ' . $e->getMessage());
-            return false;
-        }
+    // Tambahkan di class MqttListener
+private function publishMqtt(string $topic, string $message): bool
+{
+    try {
+        $clientId = $this->mqttConfig['clientId'] . bin2hex(random_bytes(4));
+        $settings = (new ConnectionSettings)
+            ->setUsername($this->mqttConfig['username'])
+            ->setPassword($this->mqttConfig['password'])
+            ->setUseTls(true)
+            ->setConnectTimeout(5)
+            ->setKeepAliveInterval(10)
+            ->setTlsSelfSignedAllowed(false);
+
+        $client = new MqttClient($this->mqttConfig['host'], $this->mqttConfig['port'], $clientId);
+        $client->connect($settings, true);
+        $client->publish($topic, $message, 0, false);
+        $client->disconnect();
+        
+        CLI::write(" Published to $topic : $message", 'light_gray');
+        return true;
+    } catch (\Exception $e) {
+        log_message('error', ' MQTT Publish Failed: ' . $e->getMessage());
+        CLI::error(' Publish Failed: ' . $e->getMessage());
+        return false;
     }
+}
 
     private function getMqttClient()
     {
-        // ✅ WAJIB: setUseTls(true) untuk port 8883
         $settings = (new ConnectionSettings)
             ->setUsername($this->username)
             ->setPassword($this->password)
-            ->setUseTls(true)           // ✅ INI YANG KURANG!
+            ->setUseTls(true)           
             ->setConnectTimeout(5)
             ->setKeepAliveInterval(30);
 
@@ -51,7 +62,7 @@ class MqttListener extends BaseCommand
     }
     public function run(array $params)
     {
-        CLI::write('🚀 Starting MQTT Listener...', 'yellow');
+        CLI::write(' Starting MQTT Listener...', 'yellow');
 
         $clientId = $this->mqttConfig['clientId'] . bin2hex(random_bytes(4));
 
@@ -68,15 +79,15 @@ class MqttListener extends BaseCommand
         try {
             CLI::write("🔗 Connecting to {$this->mqttConfig['host']}:{$this->mqttConfig['port']}...", 'yellow');
             $mqtt->connect($settings, true);
-            CLI::write('✅ Connected to MQTT Broker', 'green');
+            CLI::write(' Connected to MQTT Broker', 'green');
         } catch (\Exception $e) {
             $msg = $e->getMessage();
-            CLI::error('❌ MQTT Connect Failed: ' . $msg);
+            CLI::error(' MQTT Connect Failed: ' . $msg);
             
             if (strpos($msg, 'certificate') !== false || strpos($msg, 'SSL') !== false) {
-                CLI::error('💡 Fix: Set openssl.cafile di php.ini');
+                CLI::error(' Fix: Set openssl.cafile di php.ini');
             } elseif (strpos($msg, '10060') !== false || strpos($msg, 'timeout') !== false) {
-                CLI::error('💡 Fix: Cek firewall atau Test-NetConnection');
+                CLI::error(' Fix: Cek firewall atau Test-NetConnection');
             }
             return;
         }
@@ -84,22 +95,17 @@ class MqttListener extends BaseCommand
         $model = new TransaksiModel();
         $lastPing = time();
 
-        // 🟢 SUBSCRIBE: ENTRY RFID
+        // SUBSCRIBE: ENTRY RFID
         $mqtt->subscribe('parking/adew/entry/rfid', function ($topic, $message) use ($model) {
             try {
-                // ✅ PARSE: JSON → Plain Text
                 $parsed = $this->parseMqttMessageInline($message);
                 $rfid = $parsed['rfid'];
                 $jenis = $parsed['jenis'];
-                $published = $this->publishMqtt("parking/adew/entry/servo", "OPEN");
-                $msg = $published 
-            ? 'Kendaraan berhasil masuk.' 
-            : 'Kendaraan masuk, tapi servo gagal (cek log).';
-                // ✅ FIX: 'gray' → 'light_gray'
-                CLI::write("🔍 Raw: $message → RFID=$rfid, Jenis=$jenis", 'light_gray');
+                $this->publishMqtt("parking/adew/entry/servo", "OPEN");
+                CLI::write(" Raw: $message → RFID=$rfid, Jenis=$jenis", 'light_gray');
                 
                 if (empty($rfid) || strlen($rfid) < 4) {
-                    CLI::write("⚠️ Invalid RFID: $rfid", 'yellow');
+                    CLI::write(" Invalid RFID: $rfid", 'yellow');
                     return;
                 }
                 
@@ -119,18 +125,17 @@ class MqttListener extends BaseCommand
                         'checkin_time' => date('Y-m-d H:i:s'),
                         'status' => 'masuk'
                     ]);
-                    CLI::write("🚗 ENTRY: $rfid | Jenis: $jenis | Tarif: Rp $tarif", 'cyan');
+                    CLI::write(" ENTRY: $rfid | Jenis: $jenis | Tarif: Rp $tarif", 'cyan');
                 }
             } catch (\Exception $e) {
                 log_message('error', 'ENTRY Callback Error: ' . $e->getMessage());
-                CLI::error('⚠️ Error processing ENTRY: ' . $e->getMessage());
+                CLI::error(' Error processing ENTRY: ' . $e->getMessage());
             }
         }, 0);
 
-        // 🔴 SUBSCRIBE: EXIT RFID
+        // SUBSCRIBE: EXIT RFID
         $mqtt->subscribe('parking/adew/exit/rfid', function ($topic, $message) use ($model) {
             try {
-                // ✅ PARSE: JSON → Plain Text
                 $parsed = $this->parseMqttMessageInline($message);
                 $rfid = $parsed['rfid'];
                 
@@ -145,13 +150,13 @@ class MqttListener extends BaseCommand
                     $checkin = $transaksi['checkin_time'];
                     
                     if (empty($checkin)) {
-                        CLI::error("⚠️ Invalid checkin_time for RFID: $rfid");
+                        CLI::error(" Invalid checkin_time for RFID: $rfid");
                         return;
                     }
                     
                     $checkinTimestamp = strtotime((string) $checkin);
                     if ($checkinTimestamp === false) {
-                        CLI::error("⚠️ Cannot parse checkin_time: $checkin");
+                        CLI::error(" Cannot parse checkin_time: $checkin");
                         return;
                     }
 
@@ -166,30 +171,28 @@ class MqttListener extends BaseCommand
                         'bayar' => $bayar,
                         'status' => 'keluar'
                     ]);
-                    CLI::write("🚙 EXIT: $rfid | Durasi: " . round($durasiJam, 2) . " jam | Bayar: Rp " . number_format($bayar, 0, ',', '.'), 'yellow');
+                    CLI::write(" EXIT: $rfid | Durasi: " . round($durasiJam, 2) . " jam | Bayar: Rp " . number_format($bayar, 0, ',', '.'), 'yellow');
                 } else {
-                    CLI::write("⚠️ No active session for RFID: $rfid", 'yellow');
+                    CLI::write(" No active session for RFID: $rfid", 'yellow');
                 }
             } catch (\Exception $e) {
                 log_message('error', 'EXIT Callback Error: ' . $e->getMessage());
-                CLI::error('⚠️ Error processing EXIT: ' . $e->getMessage());
+                CLI::error(' Error processing EXIT: ' . $e->getMessage());
             }
         }, 0);
 
-        CLI::write('🔄 Listening... (Ctrl+C to stop)', 'green');
+        CLI::write(' Listening... (Ctrl+C to stop)', 'green');
         
         while (true) {
             $mqtt->loop(true);
             
             if (time() - $lastPing >= 30) {
-                // ✅ FIX: 'gray' → 'light_gray'
-                CLI::write('💓 Still listening...', 'light_gray');
+                CLI::write(' Still listening...', 'light_gray');
                 $lastPing = time();
             }
         }
     }
 
-    // ✅ FUNGSI: Parse JSON → Plain Text
     private function parseMqttMessageInline(string $message): array
     {
         $result = ['rfid' => '', 'jenis' => 'motor'];
@@ -204,7 +207,6 @@ class MqttListener extends BaseCommand
                 $result['jenis'] = strtolower(trim($data['jenis']));
             }
         } else {
-            // Bukan JSON → anggap message adalah plain RFID
             $result['rfid'] = strtoupper(trim($message));
         }
         
